@@ -38,6 +38,9 @@ public class NeedlemanWunsch {
 	// valores caso n qeira usar matriz
 	private short match, mismatch;
 
+	// quanto tempo demora algoritmo
+	long begin, totalTime;
+
 	public static void main(String[] args) {
 
 		NeedlemanWunsch nw = new NeedlemanWunsch();
@@ -152,6 +155,9 @@ public class NeedlemanWunsch {
 
 	// inicializar a matriz de resultados a zero
 	private void init() {
+
+		begin = System.currentTimeMillis();
+
 		matrixRes = new int[seq1Size + 1][seq2Size + 1];
 
 		for (int i = 0; i <= seq1Size; i++) {
@@ -169,6 +175,12 @@ public class NeedlemanWunsch {
 
 	// imprimir matriz resultado so pa confirmar
 	private void printMatrix() {
+
+		System.out.print(" | _ |");
+		for (int i = 0; i < seq1.length(); i++) {
+			System.out.print(" " + seq1.charAt(i) + " |");
+		}
+		System.out.print("\n_|");
 		for (int i = 0; i <= seq2Size; i++) {
 			for (int j = 0; j <= seq1Size; j++) {
 				if (matrixRes[j][i] < -9)
@@ -181,6 +193,8 @@ public class NeedlemanWunsch {
 					System.out.print(" " + matrixRes[j][i] + "|");
 			}
 			System.out.println();
+			if (i != seq2Size) // ficou engatado por causa dos gaps
+				System.out.print(seq2.charAt(i) + "|");
 		}
 	}
 
@@ -260,9 +274,9 @@ public class NeedlemanWunsch {
 
 		/* Com while n trabalha la mt bem n sei prq =( 
 		while ((i > 0) || (j > 0)) {
-
+		
 			System.out.println(i + " " + j + " " + matrixRes[i][j]);
-
+		
 			if ((i > 0) && (j > 0) && matrixRes[i][j] == matrixRes[i - 1][j - 1] + convertCompoundToInt(
 					Character.toString(seq1.charAt(i - 1)), Character.toString(seq2.charAt(j - 1)))) {
 				finalA += seq1.charAt(i - 1);
@@ -288,6 +302,8 @@ public class NeedlemanWunsch {
 		}
 		*/
 
+		totalTime = System.currentTimeMillis() - begin;
+
 		finalSeq1 = new String(a.reverse().toString());
 		guideLine = guideLine + new String(gl.reverse().toString());
 		finalSeq2 = new String(b.reverse().toString());
@@ -295,7 +311,7 @@ public class NeedlemanWunsch {
 
 	private void printScoreAndAlignment() {
 		if (seeMatrix) {
-			System.out.println("\n\nFinal matrix result: ");
+			System.out.println("\n\nFinal matrix result:\n");
 			printMatrix();
 		}
 		System.out.println("\nOptimal score: " + score);
@@ -304,5 +320,6 @@ public class NeedlemanWunsch {
 		System.out.println(guideLine);
 		System.out.println("Sequence 2: " + finalSeq2);
 		System.out.println();
+		System.out.println("It took: " + totalTime + " miliseconds\n");
 	}
 }
