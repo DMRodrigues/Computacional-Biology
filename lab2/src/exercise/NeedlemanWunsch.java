@@ -8,6 +8,10 @@ import org.biojava.nbio.alignment.template.SubstitutionMatrix;
 import org.biojava.nbio.core.sequence.compound.AminoAcidCompound;
 import org.biojava.nbio.core.sequence.compound.AminoAcidCompoundSet;
 
+/* TODO
+ * 		update backtrack to find all sequence's
+ * 		update backtrack on compare to NOT calculate the values again
+*/
 public class NeedlemanWunsch {
 
 	// sequencia 1 info
@@ -17,6 +21,8 @@ public class NeedlemanWunsch {
 	// sequencia 2 info
 	private String seq2 = null;
 	private int seq2Size = -1;
+
+	private String guideLine;
 
 	private int penalty; // sera bom ter valor default?
 
@@ -28,9 +34,6 @@ public class NeedlemanWunsch {
 
 	// conjunto de dados finais obtidos
 	private int score;
-	private String finalSeq1 = new String();
-	private String finalSeq2 = new String();
-	private String guideLine = new String("            ");
 
 	// se quiser usar matriz ou nao; se quiser ver matriz no fim
 	private boolean isMatrix, seeMatrix;
@@ -38,8 +41,10 @@ public class NeedlemanWunsch {
 	// valores caso n qeira usar matriz
 	private short match, mismatch;
 
+	private int total = 0;
+
 	// quanto tempo demora algoritmo
-	long begin, totalTime;
+	private long begin, totalTime;
 
 	public static void main(String[] args) {
 
@@ -55,37 +60,40 @@ public class NeedlemanWunsch {
 
 	// processar as informacoes de input
 	private void processInput() {
+
 		System.out.println("Welcome!!!");
 
 		Scanner in = new Scanner(System.in); // pa ler do input as sequencias e cenas assim
 
 		System.out.print("Enter sequence 1: ");
-		seq1 = in.nextLine();
+		this.seq1 = in.nextLine();
 
 		// simples verificacao
-		if (seq1 == null || seq1.equals("")) {
+		if (this.seq1 == null || this.seq1.equals("")) {
 			System.out.println("Error exiting =(");
 			System.exit(1);
 		}
 
 		// SAFE TO UPDATE
-		seq1Size = seq1.length();
+		this.seq1.toUpperCase();
+		this.seq1Size = this.seq1.length();
 
 		System.out.print("Enter sequence 2: ");
-		seq2 = in.nextLine();
+		this.seq2 = in.nextLine();
 
 		// simples verificacao
-		if (seq2 == null || seq2.equals("")) {
+		if (this.seq2 == null || this.seq2.equals("")) {
 			System.out.println("Error exiting =(");
 			System.exit(1);
 		}
 
 		// SAFE TO UPDATE
-		seq2Size = seq2.length();
+		this.seq2.toUpperCase();
+		this.seq2Size = this.seq2.length();
 
 		System.out.print("Enter gap penalty: ");
 		try {
-			penalty = new Integer(in.nextLine()); // verificar valor de penalty ???
+			this.penalty = new Integer(in.nextLine()); // verificar valor de penalty ???
 		} catch (Exception e) {
 			System.out.println("Error exiting =(");
 			System.exit(1);
@@ -94,23 +102,23 @@ public class NeedlemanWunsch {
 		// processar pa saber q tipo de matriz qer
 		System.out.print("Wish scoring matrix(or match/mismatch)? [true / false] : ");
 		try {
-			isMatrix = Boolean.valueOf(in.nextLine().toLowerCase());
+			this.isMatrix = Boolean.valueOf(in.nextLine().toLowerCase());
 		} catch (Exception e) {
 			System.out.println("Error exiting =(");
 			System.exit(1);
 		}
 
-		if (!isMatrix) {
+		if (!this.isMatrix) {
 			System.out.print("Enter match value: ");
 			try {
-				match = Short.parseShort(in.nextLine().toLowerCase());
+				this.match = Short.parseShort(in.nextLine().toLowerCase());
 			} catch (Exception e) {
 				System.out.println("Error exiting =(");
 				System.exit(1);
 			}
 			System.out.print("Enter mismatch value: ");
 			try {
-				mismatch = Short.parseShort(in.nextLine().toLowerCase());
+				this.mismatch = Short.parseShort(in.nextLine().toLowerCase());
 			} catch (Exception e) {
 				System.out.println("Error exiting =(");
 				System.exit(1);
@@ -127,7 +135,8 @@ public class NeedlemanWunsch {
 			try {
 				// criar uma matriz BLOSUM ou PAM conforme a escolha
 				// o 2 argumento da SimpleSubstitutionMatrix vai procurar na biblioteca biojava
-				matrix = new SimpleSubstitutionMatrix<AminoAcidCompound>(AminoAcidCompoundSet.getAminoAcidCompoundSet(),
+				this.matrix = new SimpleSubstitutionMatrix<AminoAcidCompound>(
+						AminoAcidCompoundSet.getAminoAcidCompoundSet(),
 						new InputStreamReader(SimpleSubstitutionMatrix.class
 								.getResourceAsStream(new String("/" + tempMatrixString + ".txt"))),
 						tempMatrixString);
@@ -142,7 +151,7 @@ public class NeedlemanWunsch {
 
 		System.out.print("btw wish to see the final matrix? [true / false]: ");
 		try {
-			seeMatrix = Boolean.valueOf(in.nextLine().toLowerCase());
+			this.seeMatrix = Boolean.valueOf(in.nextLine().toLowerCase());
 		} catch (Exception e) {
 			System.out.println("Error exiting =(");
 			System.exit(1);
@@ -156,170 +165,156 @@ public class NeedlemanWunsch {
 	// inicializar a matriz de resultados a zero
 	private void init() {
 
-		begin = System.currentTimeMillis();
+		this.begin = System.currentTimeMillis();
 
-		matrixRes = new int[seq1Size + 1][seq2Size + 1];
+		this.matrixRes = new int[this.seq1Size + 1][this.seq2Size + 1]; // contar com gaps
 
-		for (int i = 0; i <= seq1Size; i++) {
-			for (int j = 0; j <= seq2Size; j++) {
-				if (i == 0) {
-					matrixRes[i][j] = (j * penalty); // penalty e linear logo multiplica
-				} else if (j == 0) {
-					matrixRes[i][j] = (i * penalty);
-				} else {
-					matrixRes[i][j] = 0;
-				}
-			}
+		for (int i = 0; i <= this.seq1Size; i++) {
+			this.matrixRes[i][0] = (i * this.penalty); // penalty e linear logo multiplica
+		}
+		for (int j = 0; j <= this.seq2Size; j++) {
+			this.matrixRes[0][j] = (j * this.penalty);
 		}
 	}
 
 	// imprimir matriz resultado so pa confirmar
 	private void printMatrix() {
 
-		System.out.print(" | _ |");
-		for (int i = 0; i < seq1.length(); i++) {
-			System.out.print(" " + seq1.charAt(i) + " |");
+		System.out.print("\n | _ |");
+		for (int i = 0; i < this.seq1.length(); i++) {
+			System.out.print(" " + this.seq1.charAt(i) + " |");
 		}
 		System.out.print("\n_|");
-		for (int i = 0; i <= seq2Size; i++) {
-			for (int j = 0; j <= seq1Size; j++) {
-				if (matrixRes[j][i] < -9)
+		for (int i = 0; i <= this.seq2Size; i++) {
+			for (int j = 0; j <= this.seq1Size; j++) {
+				if (this.matrixRes[j][i] < -9)
 					System.out.print(matrixRes[j][i] + "|");
-				else if (matrixRes[j][i] < 0)
-					System.out.print(" " + matrixRes[j][i] + "|");
-				else if (matrixRes[j][i] < 10)
-					System.out.print("  " + matrixRes[j][i] + "|");
+				else if (this.matrixRes[j][i] < 0)
+					System.out.print(" " + this.matrixRes[j][i] + "|");
+				else if (this.matrixRes[j][i] < 10)
+					System.out.print("  " + this.matrixRes[j][i] + "|");
 				else
-					System.out.print(" " + matrixRes[j][i] + "|");
+					System.out.print(" " + this.matrixRes[j][i] + "|");
 			}
 			System.out.println();
-			if (i != seq2Size) // ficou engatado por causa dos gaps
+			if (i != this.seq2Size) // ficou engatado por causa dos gaps
 				System.out.print(seq2.charAt(i) + "|");
 		}
 	}
 
 	// fazer o processamento da matriz dos resultados com base na matriz dada
 	private void compute() {
-		for (int i = 1; i <= seq1Size; i++) {
-			for (int j = 1; j <= seq2Size; j++) {
 
-				// se for match/mistach com base na tabela ou valor dado
-				int diagonalValue = matrixRes[i - 1][j - 1] + convertCompoundToValue(
-						Character.toString(seq1.charAt(i - 1)), Character.toString(seq2.charAt(j - 1)));
+		int diagonalValue, leftValue, upValue;
+
+		for (int i = 1; i <= this.seq1Size; i++) {
+			for (int j = 1; j <= this.seq2Size; j++) {
+
+				// se for this.match/mistach com base na tabela ou valor dado
+				diagonalValue = this.matrixRes[i - 1][j - 1] + convertCompoundToValue(
+						Character.toString(this.seq1.charAt(i - 1)), Character.toString(this.seq2.charAt(j - 1)));
 
 				// se gap horizontal
-				int leftValue = matrixRes[i][j - 1] + penalty;
+				leftValue = this.matrixRes[i][j - 1] + this.penalty;
 
 				// se gap vertical
-				int upValue = matrixRes[i - 1][j] + penalty;
+				upValue = this.matrixRes[i - 1][j] + this.penalty;
 
 				// ir buscar o melhor resultado dos 3
-				matrixRes[i][j] = Math.max(Math.max(diagonalValue, leftValue), upValue);
+				this.matrixRes[i][j] = Math.max(Math.max(diagonalValue, leftValue), upValue);
 			}
-		}
-	}
-
-	// obter o valor do match/mismatch tendo conta a entrada na tabela
-	private short convertCompoundToValue(String s1, String s2) {
-
-		// se tiver usar matriz blosum ir buscar valor tendo conta os aminoacid "A", "B", etc
-		if (isMatrix)
-			return matrix.getValue(AminoAcidCompoundSet.getAminoAcidCompoundSet().getCompoundForString(s1),
-					AminoAcidCompoundSet.getAminoAcidCompoundSet().getCompoundForString(s2));
-
-		// se usar valor match/mismatch
-		else {
-			if (s1.equals(s2))
-				return match;
-			else
-				return mismatch;
 		}
 	}
 
 	// efectuar o processamento traceback e saber qual a sequencia obtida
 	private void backtrack() {
 
-		score = matrixRes[seq1Size][seq2Size]; // resultado na ultima posicao
+		boolean flag = false;
 
-		// strings temp pa guardar uma dos resultados optimos
+		this.score = this.matrixRes[this.seq1Size][this.seq2Size]; // resultado na ultima posicao
+
 		StringBuilder a = new StringBuilder(), b = new StringBuilder(), gl = new StringBuilder();
 
-		for (int i = seq1Size, j = seq2Size; i > 0 || j > 0;) {
+		int i = seq1Size, j = seq2Size;
+
+		while ((i > 0) || (j > 0)) {
 
 			// e match/mistach investigar melhor
-			if (i > 0 && j > 0 && matrixRes[i][j] == matrixRes[i - 1][j - 1] + convertCompoundToValue(
-					Character.toString(seq1.charAt(i - 1)), Character.toString(seq2.charAt(j - 1)))) {
+			if (i > 0 && j > 0 && this.matrixRes[i][j] == this.matrixRes[i - 1][j - 1] + convertCompoundToValue(
+					Character.toString(this.seq1.charAt(i - 1)), Character.toString(this.seq2.charAt(j - 1)))) {
 
-				a.append(seq1.charAt(--i));
-				b.append(seq2.charAt(--j));
+				a.append(this.seq1.charAt(--i));
+				b.append(this.seq2.charAt(--j));
 
-				if (seq1.charAt(i) == seq2.charAt(j)) // se for match
+				if (this.seq1.charAt(i) == this.seq2.charAt(j)) // se for match
 					gl.append("|");
 				else
 					gl.append(" "); // se for mismatch
+
+				flag = true;
 			}
 			// gap horizontal
-			else if (i > 0 && matrixRes[i][j] == matrixRes[i - 1][j] + penalty) {
-				a.append(seq1.charAt(--i));
-				b.append("-"); // se for gap
-				gl.append(" ");
+			if (i > 0 && this.matrixRes[i][j] == this.matrixRes[i - 1][j] + this.penalty) {
+
+				if (flag)
+					this.total++;
+				else {
+					a.append(this.seq1.charAt(--i));
+					b.append("-"); // se for gap
+					gl.append(" ");
+				}
 			}
 			// gap vertical
-			else if (j > 0 && matrixRes[i][j] == matrixRes[i][j - 1] + penalty) {
-				b.append(seq2.charAt(--j));
-				a.append("-"); // se for gap
-				gl.append(" ");
-			}
-		}
+			if (j > 0 && this.matrixRes[i][j] == this.matrixRes[i][j - 1] + this.penalty) {
 
-		/* Com while n trabalha la mt bem n sei prq =( 
-		while ((i > 0) || (j > 0)) {
-		
-			System.out.println(i + " " + j + " " + matrixRes[i][j]);
-		
-			if ((i > 0) && (j > 0) && matrixRes[i][j] == matrixRes[i - 1][j - 1] + convertCompoundToInt(
-					Character.toString(seq1.charAt(i - 1)), Character.toString(seq2.charAt(j - 1)))) {
-				finalA += seq1.charAt(i - 1);
-				finalB += seq2.charAt(j - 1);
-				i--;
-				j--;
-				System.out.println("1");
-			} else if (matrixRes[i][j] == matrixRes[i][j - 1] + penalty) {
-				if (j == 0)
-					finalA += new String("_");
+				if (flag)
+					this.total++;
 				else {
-					finalA += new String("_");
-					finalB += seq2.charAt(j - 1);
-					j--;
+					b.append(this.seq2.charAt(--j));
+					a.append("-"); // se for gap
+					gl.append(" ");
 				}
-				System.out.println("2");
-			} else {
-				finalA += seq1.charAt(i - 1);
-				finalB += new String("_");
-				i--;
-				System.out.println("3"); // continue;
 			}
+			flag = false;
 		}
-		*/
 
-		totalTime = System.currentTimeMillis() - begin;
+		// update seqs
+		seq1 = new String(a.reverse().toString());
+		seq2 = new String(b.reverse().toString());
+		guideLine = new String("            " + gl.reverse().toString());
 
-		finalSeq1 = new String(a.reverse().toString());
-		guideLine = guideLine + new String(gl.reverse().toString());
-		finalSeq2 = new String(b.reverse().toString());
+		this.totalTime = System.currentTimeMillis() - this.begin;
 	}
 
 	private void printScoreAndAlignment() {
-		if (seeMatrix) {
-			System.out.println("\n\nFinal matrix result:\n");
+		if (this.seeMatrix) {
+			System.out.print("\n\nFinal matrix result:");
 			printMatrix();
 		}
-		System.out.println("\nOptimal score: " + score);
-		System.out.println("\nAlignment");
-		System.out.println("Sequence 1: " + finalSeq1);
-		System.out.println(guideLine);
-		System.out.println("Sequence 2: " + finalSeq2);
+		System.out.println("\n\nOptimal score: " + this.score);
+		System.out.println("\nTotal sequences: " + this.total);
+		System.out.println("\nSolution");
+		System.out.println("Sequence 1: " + this.seq1);
+		System.out.println(this.guideLine);
+		System.out.println("Sequence 2: " + this.seq2);
 		System.out.println();
-		System.out.println("It took: " + totalTime + " miliseconds\n");
+		System.out.println("It took: " + this.totalTime + " miliseconds\n");
+	}
+
+	// obter o valor do this.match/this.mismatch tendo conta a entrada na tabela
+	private short convertCompoundToValue(String s1, String s2) {
+
+		// se tiver usar matriz blosum ir buscar valor tendo conta os aminoacid "A", "B", etc
+		if (this.isMatrix)
+			return this.matrix.getValue(AminoAcidCompoundSet.getAminoAcidCompoundSet().getCompoundForString(s1),
+					AminoAcidCompoundSet.getAminoAcidCompoundSet().getCompoundForString(s2));
+
+		// se usar valor this.match/this.mismatch
+		else {
+			if (s1.equals(s2))
+				return this.match;
+			else
+				return this.mismatch;
+		}
 	}
 }
