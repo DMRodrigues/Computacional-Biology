@@ -1,7 +1,7 @@
 import java.io.InputStreamReader;
 import java.util.Scanner;
 
-public class Viterbi {
+public class Forward {
 
 
 	//Start probabilities
@@ -18,12 +18,9 @@ public class Viterbi {
 
 	//End probabilities
 	private double[] end;
-
+	
 	//Result matrix
 	private double[][] matrix;
-
-	//Matrix with simplified arrows
-	private int[][] pointers;
 
 	//Print matrix or not
 	private boolean seeMatrix;
@@ -32,23 +29,20 @@ public class Viterbi {
 	private String seq;
 	private int seqSize;
 
-	//Most likely path
-	private String path;
+	//Probability P(X)
+	private double probability;
 
 	private long begin, totalTime;
-	
-	
+
 
 	public static void main(String[] args) {
 
-		Viterbi vit = new Viterbi();
+		Forward fwd = new Forward();
 
-		vit.processInput();
-		vit.init();
-		vit.compute();
-		vit.backtrace();
-		vit.printResults();
-		
+		fwd.processInput();
+		fwd.init();
+		fwd.compute();
+		fwd.printResults();
 	}
 
 	private void processInput() {
@@ -63,7 +57,7 @@ public class Viterbi {
 
 		System.out.println("\nATENCAO: Nos valores seguintes, usar virgula nos numeros decimais.");
 
-        System.out.println("Enter the start probabilities:");
+        System.out.println("\nEnter the start probabilities:");
 		System.out.println("Ex: Listagem de valores na vertical - s11, s12, etc.");
 
 		this.start = new double[tranSize];
@@ -126,17 +120,10 @@ public class Viterbi {
 	private void init() {
 
 		int columnEm;
-		
+
 		this.begin = System.currentTimeMillis();
 		this.matrix = new double[this.tranSize][this.seqSize];
-		this.pointers = new int[this.tranSize][this.seqSize];
-
-		/*for(int i = 0; i < tranSize; i++){
-			for(int j = 0; j < seqSize; j++){
-				pointers[i][j] = new ArrayList(); 
-			}
-		}*/
-
+	
 		//Detecta qual e o char q se esta a observar
 		columnEm = getLetter(seq.charAt(0));
 
@@ -150,59 +137,27 @@ public class Viterbi {
 	public void compute(){
 		
 		int columnEm, maxIndex;
-		double[] score = new double[this.tranSize];
-		double max;
+		double max, sum = 0.0;
+		probability = 0.0;
 
 		for(int i = 1; i < seqSize; i++){ //Percorre cada char da sequencia		
 			
 			columnEm = getLetter(seq.charAt(i));
 			
 			for(int j = 0; j < tranSize; j++){ //Percorre cada cj estado/sequencia
-
-				for(int s = 0; s < tranSize; s++){ //Calcula o score vindo de cada estado
-					score[s] = emission[j][columnEm] * matrix[s][i-1] * transition[s][j];
+	
+				for(int s = 0; s < tranSize; s++){ //Calcula a soma de scores vindos de cada estado
+					sum += emission[j][columnEm] * matrix[s][i-1] * transition[s][j];
 				}
-
-				max = score[0];
-				maxIndex = 0;
 				
-				for(int m = 0; m < score.length; m++) { //Calcula o max e o seu indice de todos os scores obtidos
-					if(score[m] > max) {
-						max = score[m];
-						maxIndex = m;
-					}
-				}
-				matrix[j][i] = max;
-				pointers[j][i] = maxIndex; //Guarda o estado q deu origem ao score
-			}
-		} 
-	}
-
-	public void backtrace(){
-
-		StringBuilder temPath = new StringBuilder();
-
-		int next, prev, maxIndex = tranSize-1;
-		double max = matrix[tranSize-1][seqSize-1];
-		
-		for(int m = 0; m < tranSize; m++) { //Calcula o max e o seu indice dos valores finais
-			if(matrix[m][seqSize-1] > max) {
-				max = matrix[m][seqSize-1];
-				maxIndex = m;
+				matrix[j][i] = sum;
+				sum = 0.0;
 			}
 		}
 
-		prev = pointers[maxIndex][seqSize-1];
-		temPath.append((maxIndex + 1) + "S ");
-		
-		for(int i = seqSize-1; i > 0 ; i--){ //Acede ao valor da matriz pointers que contem o proximo estado a ir
-			
-			next = pointers[prev][i];
-			temPath.append((next + 1) + "S ");
-			prev = next;
+		for(int i = 0; i < tranSize; i++){
+			probability += (matrix[i][seqSize-1]) * end[i];
 		}
-
-		this.path = new String(temPath.reverse().toString());
 
 		this.totalTime = System.currentTimeMillis() - this.begin;
 	}
@@ -210,10 +165,10 @@ public class Viterbi {
 	private void printResults() {
 		if (this.seeMatrix) {
 			System.out.print("\n\nFinal matrix result:");
-			printMatrix();
+		//	printMatrix();
 		}
-		System.out.println();
-		System.out.println("\nMost likely path: " + this.path);
+
+		System.out.println("\nProbability P(X): " + this.probability);
 
 		System.out.println("\nIt took: " + this.totalTime + " miliseconds\n");
 	}
@@ -240,8 +195,12 @@ public class Viterbi {
 
 	private void printMatrix() {
 
-
-	}	
-
+		for(int i = 0; i < tranSize; i++){
+			for(int j = 0; j < seqSize; j++){
+				System.out.println(i + "  " + j + "  " + matrix[i][j]);
+			}
+		}
+		
+	}
 
 }
