@@ -11,20 +11,28 @@ import java.util.Scanner;
 
 public class Simulator {
 	
-	private static String FILENAME = ""; // file of input
-	private static int ss = -1; // sequence size
-	static int ps = -1; // population size
-	static int generations; // number of genetarions
-	static double mr; // mutation rate
-	static double rr; // recombination rate
-	static int rfl; // recombination fragment length
+	private String INFILENAME; // file of input
+	private String OUTFILENAME; // file to output
+	private int ss; // sequence size
+	private int ps; // population size
+	private int generations; // number of genetarions
+	private double mr; // mutation rate
+	private double rr; // recombination rate
+	private int rfl; // recombination fragment length
+	private List<String> sequences;
 	
 	public static void main(String[] args) {
-		input();
+		
+		Simulator sim = new Simulator();
+		
+		sim.input();
+		//sim.mutation();
+		//sim.recombination();
+		sim.output();
 	}
 	
 	// function to process input from FASTA file
-	private static void input(){		
+	private void input(){		
 		StringBuffer stringBuffer = new StringBuffer();
 		String line = null;
 		
@@ -32,18 +40,16 @@ public class Simulator {
 		Scanner in = new Scanner(System.in);
 		
 		System.out.println("Introduce FASTA file ->");
-		FILENAME = in.nextLine();
+		this.INFILENAME = in.nextLine();
 		
 		System.out.println("Introduce number of sequence size ->");
-		String text = in.nextLine();
-		ss = Integer.parseInt(text);
+		this.ss = in.nextInt();
 		
 		System.out.println("Introduce number of population size ->");
-		text = in.nextLine();
-		ps = Integer.parseInt(text);
+		this.ps = in.nextInt();
 		
 		try {
-			FileReader reader = new FileReader(FILENAME);
+			FileReader reader = new FileReader(INFILENAME);
 			BufferedReader bufferedreader = new BufferedReader(reader);
 			
 			// in each line at FASTA file we append new line
@@ -52,39 +58,22 @@ public class Simulator {
 				}
 			
 			// to remove initial header
-			String test[] = (stringBuffer.toString()).split("\\n",2);
-			//System.out.println(test[1]);
+			String splited[] = (stringBuffer.toString()).split("\\n",2);
 			
 			// to remove \n from original genome in FASTA file
-			test[1] = test[1].replaceAll("[\r\n]", "");
+			splited[1] = splited[1].replaceAll("[\r\n]", "");
 			
 			// to construct each sequences from genome at FASTA file
-			List<String> sequences = new ArrayList<String>();
+			this.sequences = new ArrayList<String>();
 			int index = 0;
-			while (index < test[1].length()) {
-			    sequences.add(test[1].substring(index, Math.min(index + ss,test[1].length())));
-			    index += ss;
+			while (index < splited[1].length()) {
+			    this.sequences.add(splited[1].substring(index, Math.min(index + this.ss,splited[1].length())));
+			    index += this.ss;
 			}
-			
-			for(int i = 0; i<ps; i++)
-			System.out.println(">sequence_"+(i+1)+"\n"+sequences.get(i)+"\n");
-			
-			//for(int i=0; i<ps; i++){
-
-			//while((line=bufferedreader.readLine()) != null){
-		/*
-				for(int j=0; j<ss; j++){
-					if((chars=bufferedreader.read()) != -1)
-					str.append((char)chars);
-				}
-				//str.append("\n");
-				String sequence = str.toString();
-				System.out.println(sequence);
-				output(sequence);*/
-			//}
-			
-
-				
+			/*
+			for(int i = 0; i<this.ps; i++)
+			System.out.println(">sequence_"+(i+1)+"\n"+this.sequences.get(i)+"\n");
+			*/
 			reader.close();
 			
 		} catch (IOException e) {
@@ -92,15 +81,27 @@ public class Simulator {
 		}
 	}
 	
-	private static void output(String sequence){
+	private void output(){
 		try {
-			FileWriter writer = new FileWriter("teste.txt");
+			
+			// create a FASTA file with output on desired folder
+			Scanner out = new Scanner(System.in);
+			System.out.println("Where you want to save the FASTA file? ->");
+			this.OUTFILENAME = out.nextLine();
+			
+			FileWriter writer = new FileWriter(OUTFILENAME + "/output.fasta");
 			BufferedWriter bufferedWriter = new BufferedWriter(writer);
 			
-			bufferedWriter.write(sequence);
-			bufferedWriter.newLine();
+			bufferedWriter.write("Dummy header fix it later ... or not...\n");
 			
+			// to write each sequence in a different line on FASTA file
+			for(int i = 0; i<this.ps; i++){
+				bufferedWriter.write(this.sequences.get(i));
+				bufferedWriter.write("\n");
+			}
+				
 			bufferedWriter.close();
+			
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
