@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import java.util.Random;
 
 public class Simulator {
 	
@@ -26,7 +27,7 @@ public class Simulator {
 		Simulator sim = new Simulator();
 		
 		sim.input();
-		//sim.mutation();
+		sim.mutation();
 		//sim.recombination();
 		sim.output();
 	}
@@ -81,6 +82,63 @@ public class Simulator {
 		}
 	}
 	
+	//Mutation
+	private void mutation(){
+		
+		String seq;
+		String seqMutated;
+		int pos;
+		char oldNucleotide;
+		char newNucleotide;
+
+		Random rand = new Random();
+
+		//1st step
+		for(int i = 0; i < sequences.size(); i++) {
+	
+			double number = rand.nextDouble(); 
+
+			//2nd step
+			if(number <= mr){ //condition to mutate
+				seq = sequences.get(i);
+				pos = rand.nextInt(seq.length()-1); //choose a random position in the sequence
+				
+				oldNucleotide = seq.charAt(pos); //get the actual nucleotide
+				newNucleotide = randomNucleotide(oldNucleotide); //choose a random nucleotide           
+				
+				seqMutated = seq.substring(0,pos) + newNucleotide + seq.substring(pos+1); //change the actual nucleotide, in the random position, to a different one 
+				
+				//3rd step
+				sequences.set(i, seqMutated); //update the sequence
+			} 
+		}
+	}
+
+	//Random nucleotide generator
+	public char randomNucleotide(char nucleotide){ 
+		
+		int rand;
+		char newNucleotide = nucleotide;
+
+		Random generator = new Random();
+		rand = generator.nextInt(3);
+
+		while(newNucleotide == nucleotide){ //guarantees that the new nucleotide is different from the original
+			switch (rand) {
+				case 0 : newNucleotide = 'A';
+						 break;
+				case 1 : newNucleotide = 'C';
+						 break;
+				case 2 : newNucleotide = 'T';
+						 break;
+				case 3 : newNucleotide = 'G';
+						 break;
+			}
+			rand = generator.nextInt(3);
+		}
+		return newNucleotide;
+	}
+
 	private void output(){
 		try {
 			
