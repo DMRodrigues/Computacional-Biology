@@ -27,7 +27,7 @@ public class Simulator {
 		
 		sim.input();
 		//sim.mutation();
-		//sim.recombination();
+		sim.recombine();
 		sim.output();
 	}
 	
@@ -106,4 +106,12 @@ public class Simulator {
 			e.printStackTrace();
 		}
 	}
+	
+	
+	
+	private void recombine() {
+		double rng = Math.random();
+		System.out.println(rng);
+	}
+	
 }
