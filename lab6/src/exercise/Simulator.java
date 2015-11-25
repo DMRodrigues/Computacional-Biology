@@ -6,9 +6,9 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 import java.util.Scanner;
 
 import javax.swing.JFileChooser;
@@ -35,9 +35,9 @@ public class Simulator {
 		Simulator sim = new Simulator();
 
 		sim.input();
-		//sim.mutation();
+		sim.mutation();
 		sim.recombine();
-		//sim.output();
+		sim.output();
 	}
 
 	// function to process input from FASTA file
@@ -104,23 +104,21 @@ public class Simulator {
 	//Mutation
 	private void mutation() {
 
-		String seq;
-		String seqMutated;
+		String seq, seqMutated;
+		char oldNucleotide, newNucleotide;
+		double number;
 		int pos;
-		char oldNucleotide;
-		char newNucleotide;
-
-		Random rand = new Random();
 
 		//1st step
-		for (int i = 0; i < sequences.size(); i++) {
+		for (int i = 0; i < this.seqSize; i++) {
 
-			double number = rand.nextDouble();
+			number = Math.random();
 
 			//2nd step
-			if (number <= mr) { //condition to mutate
-				seq = sequences.get(i);
-				pos = rand.nextInt(seq.length() - 1); //choose a random position in the sequence
+			if (number <= this.mr) { //condition to mutate
+				
+				seq = this.sequences.get(i);
+				pos = (int) (Math.round(Math.random() * seq.length())); //choose a random position in the sequence. improve the distribution with round()
 
 				oldNucleotide = seq.charAt(pos); //get the actual nucleotide
 				newNucleotide = randomNucleotide(oldNucleotide); //choose a random nucleotide           
@@ -128,7 +126,9 @@ public class Simulator {
 				seqMutated = seq.substring(0, pos) + newNucleotide + seq.substring(pos + 1); //change the actual nucleotide, in the random position, to a different one 
 
 				//3rd step
-				sequences.set(i, seqMutated); //update the sequence
+				this.sequences.set(i, seqMutated); //update the sequence
+
+				System.out.println("Mutation in Sequence_" + (i + 1) + ", position: " + pos + ". Old nucleotide: " + oldNucleotide + ", New nucleotide: " + newNucleotide);
 			}
 		}
 	}
@@ -139,8 +139,7 @@ public class Simulator {
 		int rand;
 		char newNucleotide = nucleotide;
 
-		Random generator = new Random();
-		rand = generator.nextInt(3);
+		rand = (int) (Math.random() * 4);
 
 		while (newNucleotide == nucleotide) { //guarantees that the new nucleotide is different from the original
 			switch (rand) {
@@ -157,7 +156,7 @@ public class Simulator {
 				newNucleotide = 'G';
 				break;
 			}
-			rand = generator.nextInt(3);
+			rand = (int) (Math.random() * 4);
 		}
 		return newNucleotide;
 	}
@@ -166,7 +165,7 @@ public class Simulator {
 		
 		int mySize, max, random, randMax, copSeq;
 		double rng;
-
+		
 		// para cada sequencia na lista
 		for (int i = 0; i < this.seqSize; i++) {
 
@@ -190,18 +189,40 @@ public class Simulator {
 		}
 	}
 
+	// Given two sequences (same size), return the Hamming distance between them 
+	// The distance means the smallest number of substitutions to transform seq1 in seq2
+
+	private double hammingDistance(String seq1, String seq2){
+		
+		int size;
+		double distance = 0;
+
+		if (seq1.length() != seq2.length()) {
+    		System.out.println("Error: Input sequences should have the same length");
+    	    System.exit(1);
+	    }
+
+	    size = seq1.length(); //both sequences have same length
+
+		for (int i = 0; i < size; i++){ 
+			if(seq1.charAt(i) != seq2.charAt(i)){
+				distance++; //counting when the sequences differ
+			}
+		}
+		return (distance/size); // % of mismatching sites
+	}
+
 	private void output() {
-		System.out.println(this.sequences);
-		System.out.println(this.sequences.get(0));
+		
 		try {
 
 			int endIndex = this.INFILENAME.lastIndexOf("\\");
 			if (endIndex != -1) {
-				this.OUTFILENAME = this.INFILENAME.substring(0, endIndex); // not forgot to put check if(endIndex != -1)
+				this.OUTFILENAME = this.INFILENAME.substring(0, endIndex);
 			}
 
 			// to save output file in the same folder than input
-			FileWriter writer = new FileWriter(this.OUTFILENAME + "/output5.fasta");
+			FileWriter writer = new FileWriter(this.OUTFILENAME + "/output.fasta");
 			BufferedWriter bufferedWriter = new BufferedWriter(writer);
 
 			// to write each sequence in FASTA file
