@@ -6,7 +6,6 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -28,7 +27,7 @@ public class Simulator {
 	private int rfl; // recombination fragment length
 
 	private List<String> sequences; //list of sequences from input file
-	private int seqSize; // guardar o nr de sequencias pa n ter q calcular sempre!!!
+	private int seqSize; // number of sequences
 
 	public static void main(String[] args) {
 
@@ -189,27 +188,38 @@ public class Simulator {
 		}
 	}
 
-	// Given two sequences (same size), return the Hamming distance between them 
+	// Compute the Hamming distance between all the sequences (same size)
 	// The distance means the smallest number of substitutions to transform seq1 in seq2
 
-	private double hammingDistance(String seq1, String seq2){
-		
+	public double[][] hammingDistance(){
+
+		String seq1, seq2;
 		int size;
-		double distance = 0;
+		double dist = 0;
+		double[][] hammingDistances = new double[seqSize][seqSize];
 
-		if (seq1.length() != seq2.length()) {
-    		System.out.println("Error: Input sequences should have the same length");
-    	    System.exit(1);
-	    }
+		for(int i = 0; i < this.seqSize; i++){
+			for(int j = 0; j < this.seqSize; j++){  
+				
+				seq1 = this.sequences.get(i); 
+				seq2 = this.sequences.get(j);
+				
+				if (seq1.length() != seq2.length()) {
+    				System.out.println("Error: Input sequences should have the same length");
+    	    		System.exit(1);
+	   			 }
 
-	    size = seq1.length(); //both sequences have same length
+	   			 size = seq1.length(); //both sequences have same length
 
-		for (int i = 0; i < size; i++){ 
-			if(seq1.charAt(i) != seq2.charAt(i)){
-				distance++; //counting when the sequences differ
+				for (int c = 0; c < size; c++){ 
+					if(seq1.charAt(c) != seq2.charAt(c)){
+						dist++; //counting when the sequences differ from each other
+					}
+				}
+				hammingDistances[i][j] = dist/size; // % of mismatching sites
 			}
 		}
-		return (distance/size); // % of mismatching sites
+		return hammingDistances;
 	}
 
 	private void output() {
