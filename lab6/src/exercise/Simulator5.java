@@ -8,7 +8,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 import javax.swing.JFileChooser;
 
@@ -22,7 +21,6 @@ public class Simulator5 {
 	private int gen; // number of genetarions
 
 	private double mr; // mutation rate
-
 	private double rr; // recombination rate
 	private int rfl; // recombination fragment length
 
@@ -115,25 +113,23 @@ public class Simulator5 {
 	}
 
 	//Mutation
-	void mutation() {
+	private void mutation() {
 
-		String seq;
-		String seqMutated;
+		String seq, seqMutated;
+		char oldNucleotide, newNucleotide;
+		double number;
 		int pos;
-		char oldNucleotide;
-		char newNucleotide;
-
-		Random rand = new Random();
 
 		//1st step
-		for (int i = 0; i < sequences.size(); i++) {
+		for (int i = 0; i < this.seqSize; i++) {
 
-			double number = rand.nextDouble();
+			number = Math.random();
 
 			//2nd step
-			if (number <= mr) { //condition to mutate
-				seq = sequences.get(i);
-				pos = rand.nextInt(seq.length() - 1); //choose a random position in the sequence
+			if (number <= this.mr) { //condition to mutate
+				
+				seq = this.sequences.get(i);
+				pos = (int) (Math.round(Math.random() * seq.length())); //choose a random position in the sequence. improve the distribution with round()
 
 				oldNucleotide = seq.charAt(pos); //get the actual nucleotide
 				newNucleotide = randomNucleotide(oldNucleotide); //choose a random nucleotide           
@@ -141,7 +137,9 @@ public class Simulator5 {
 				seqMutated = seq.substring(0, pos) + newNucleotide + seq.substring(pos + 1); //change the actual nucleotide, in the random position, to a different one 
 
 				//3rd step
-				sequences.set(i, seqMutated); //update the sequence
+				this.sequences.set(i, seqMutated); //update the sequence
+
+				System.out.println("Mutation in Sequence_" + (i + 1) + ", position: " + pos + ". Old nucleotide: " + oldNucleotide + ", New nucleotide: " + newNucleotide);
 			}
 		}
 	}
@@ -152,8 +150,7 @@ public class Simulator5 {
 		int rand;
 		char newNucleotide = nucleotide;
 
-		Random generator = new Random();
-		rand = generator.nextInt(3);
+		rand = (int) (Math.random() * 4);
 
 		while (newNucleotide == nucleotide) { //guarantees that the new nucleotide is different from the original
 			switch (rand) {
@@ -170,7 +167,7 @@ public class Simulator5 {
 				newNucleotide = 'G';
 				break;
 			}
-			rand = generator.nextInt(3);
+			rand = (int) (Math.random() * 4);
 		}
 		return newNucleotide;
 	}
@@ -202,6 +199,61 @@ public class Simulator5 {
 								+ this.sequences.get(i).substring(randMax, this.maxSize));
 			}
 		}
+	}
+
+	// Compute the Hamming distance for each pair of sequences (same size)
+	// The distance means the smallest number of substitutions to transform seq1 in seq2
+
+	public double[][] hammingDistance(){
+
+		String seq1, seq2;
+		int size, dist = 0;
+		double[][] hammingDistances = new double[seqSize][seqSize];
+
+		for(int i = 0; i < this.seqSize; i++){
+			for(int j = 0; j < this.seqSize; j++){  
+				
+				seq1 = this.sequences.get(i); 
+				seq2 = this.sequences.get(j);
+				
+				if (seq1.length() != seq2.length()) {
+    				System.out.println("Error: Input sequences should have the same length");
+    	    		System.exit(1);
+	   			 }
+
+	   			 size = seq1.length(); //both sequences have same length
+
+				for (int c = 0; c < size; c++){ 
+					if(seq1.charAt(c) != seq2.charAt(c)){
+						dist++; //counting when the sequences differ from each other
+					}
+				}
+				hammingDistances[i][j] = (double) dist/size; // % of mismatching sites
+			}
+		}
+		return hammingDistances;
+	}
+
+	//Calculates the Jukes-Cantor model for each pair of sequences
+
+	public double[][] jukesCantorModel(){
+		
+		double d, p = 0.75; //d - Proportion of different sites, between two sequences
+		double[][] jukesCantor = new double[seqSize][seqSize];
+
+		for(int i = 0; i < this.seqSize; i++){
+			for(int j = 0; j < this.seqSize; j++){  
+				
+				/*if (hammingDistances[i][j] < p) {
+					d = -(3.0/4.0) * Math.log(1.0-((4.0/3.0) * p));
+				}
+				else { //the value is ignored
+					d = -1.0;
+				}
+				jukesCantor[i][j] = d;*/
+			}
+		}
+		return jukesCantor;
 	}
 
 	void output() {
