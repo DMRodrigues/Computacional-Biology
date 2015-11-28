@@ -103,8 +103,12 @@ public class Graphics {
     
     public void execute(){
     	for(int i=0; i<sim.getGEN();i++){
+    		sim.setActualGen(i+1);
 			sim.mutation();
 			sim.recombine();
+			sim.hammingDistance();
+			sim.jukesCantorModel();
+			sim.plot();
 		}
     }
     

@@ -19,6 +19,7 @@ public class Simulator5 {
 	private int ss; // sequence size
 	private int ps; // population size
 	private int gen; // number of genetarions
+	private int actualGen; //actual generation
 
 	private double mr; // mutation rate
 	private double rr; // recombination rate
@@ -28,6 +29,9 @@ public class Simulator5 {
 	private List<String> original; //list of original sequences
 	private int seqSize; // number of sequences
 	private int maxSize; // to avoid different size of sequences
+
+	private double[][] hammingDistances; // Hamming distance matrix
+	private double[][] jukesCantor; // Jukes-Cantor matrix;
 	
 	public double getMR(){
 		return this.mr;
@@ -65,6 +69,10 @@ public class Simulator5 {
 		this.gen = gen;
 	}
 	
+	public void setActualGen(int it){
+		this.actualGen = it;
+	}
+
 	public void setRFL(int rfl){
 		this.rfl = rfl;
 	}
@@ -77,7 +85,7 @@ public class Simulator5 {
 		this.mr = mr;
 	}
 
-	// function to process input from FASTA file
+	// Function to process input from FASTA file
 	public void input() {
 		String[] parsed = null;
 		String[] splited = null;
@@ -136,7 +144,7 @@ public class Simulator5 {
 		}
 	}
 
-	//Mutation
+	// Mutation
 	public void mutation() {
 
 		String seq, seqMutated;
@@ -144,12 +152,12 @@ public class Simulator5 {
 		double number;
 		int pos;
 
-		//1st step
+		// 1st step
 		for (int i = 0; i < this.seqSize; i++) {
 
 			number = Math.random();
 
-			//2nd step
+			// 2nd step
 			if (number <= this.mr) { //condition to mutate
 				
 				seq = this.sequences.get(i);
@@ -160,7 +168,7 @@ public class Simulator5 {
 
 				seqMutated = seq.substring(0, pos) + newNucleotide + seq.substring(pos + 1); //change the actual nucleotide, in the random position, to a different one 
 
-				//3rd step
+				// 3rd step
 				this.sequences.set(i, seqMutated); //update the sequence
 
 				System.out.println("Mutation in Sequence_" + (i + 1) + ", position: " + pos + ". Old nucleotide: " + oldNucleotide + ", New nucleotide: " + newNucleotide);
@@ -168,7 +176,7 @@ public class Simulator5 {
 		}
 	}
 
-	//Random nucleotide generator
+	//Auxiliar mutation function: random nucleotide generator
 	private char randomNucleotide(char nucleotide) {
 
 		int rand;
@@ -196,6 +204,7 @@ public class Simulator5 {
 		return newNucleotide;
 	}
 
+	// Recombine
 	public void recombine() {
 		
 		int max, random, randMax, copSeq;
@@ -227,15 +236,14 @@ public class Simulator5 {
 
 	// Compute the Hamming distance for each pair of sequences (same size)
 	// The distance means the smallest number of substitutions to transform seq1 in seq2
-
-	public double[][] hammingDistance(){
+	public void hammingDistance(){
 
 		String seq1, seq2;
 		int size, dist = 0;
-		double[][] hammingDistances = new double[seqSize][seqSize];
+		this.hammingDistances = new double[seqSize][seqSize];
 
 		for(int i = 0; i < this.seqSize; i++){
-			for(int j = 0; j < this.seqSize; j++){  
+			for(int j = i + 1; j < this.seqSize; j++){ //Half of the matrix (from the diagonal upwards)   
 				
 				seq1 = this.sequences.get(i); 
 				seq2 = this.sequences.get(j);
@@ -252,48 +260,81 @@ public class Simulator5 {
 						dist++; //counting when the sequences differ from each other
 					}
 				}
-				hammingDistances[i][j] = (double) dist/size; // % of mismatching sites
+				this.hammingDistances[i][j] = (double) dist/size; // % of mismatching sites
+				dist = 0;
 			}
 		}
-		return hammingDistances;
 	}
 
-	//Calculates the Jukes-Cantor model for each pair of sequences
-
-	public double[][] jukesCantorModel(){
+	//Compute the Jukes-Cantor model for each pair of sequences (same size)
+	public void jukesCantorModel(){
 		
-		double d, p = 0.75; //d - Proportion of different sites, between two sequences
-		double[][] jukesCantor = new double[seqSize][seqSize];
+		double hdist, d, p = 0.75; //p - Proportion relevant of different sites, between two sequences
+		this.jukesCantor = new double[seqSize][seqSize];
 
 		for(int i = 0; i < this.seqSize; i++){
-			for(int j = 0; j < this.seqSize; j++){  
+			for(int j = i + 1; j < this.seqSize; j++){  
 				
-				/*if (hammingDistances[i][j] < p) {
-					d = -(3.0/4.0) * Math.log(1.0-((4.0/3.0) * p));
+				hdist = this.hammingDistances[i][j];
+				if (hdist < p) {
+					d = -(3.0/4.0) * Math.log(1.0-((4.0/3.0) * hdist));
 				}
 				else { //the value is ignored
 					d = -1.0;
 				}
-				jukesCantor[i][j] = d;*/
+				this.jukesCantor[i][j] = d;
 			}
 		}
-		return jukesCantor;
 	}
 
+	// Compute the average Hamming distance and Jukes-Cantor for each generation
+	// Write the values in a doc 
+	public void plot(){
+
+		double hAvg, jcAvg;
+		double h = 0, jc = 0;
+		int num = 0, ignored = 0; //num - values counted in sum; ignored - values ignored in Jukes-Cantor
+
+		for(int i = 0; i < this.seqSize; i++){
+			for(int j = i + 1; j < this.seqSize; j++){ 
+				num ++;				
+				h += hammingDistances[i][j]; //Sum of all Hamming distances
+				
+				if(jukesCantor[i][j] >= 0)
+					jc += jukesCantor[i][j]; //Sum of all Jukes-Cantor values (excepto the proportions ignored)
+				else
+					ignored++;
+			}
+		}
+
+		hAvg = h / num; //Average of Hamming distances
+		jcAvg = jc / (num - ignored); //Average of Jukes-Cantor Model
+
+		try {
+
+			saveInputDirectory();
+
+			FileWriter writer = new FileWriter(this.OUTFILENAME + "/plot.doc", true);
+			BufferedWriter bufferedWriter = new BufferedWriter(writer);
+
+			bufferedWriter.write("Geracao: " + actualGen + "\n");
+			bufferedWriter.write(hAvg + "\n");
+			bufferedWriter.write(jcAvg + "\n");
+            bufferedWriter.newLine();
+			
+			bufferedWriter.close();
+
+		} catch(IOException e){ 
+			e.printStackTrace();
+        } 
+	}
+
+	// Write the output in a fasta file
 	public void output() {
 		try {
-			// to save the directory of input file
-			if(this.INFILENAME==null) {
-				this.OUTFILENAME = System.getProperty("user.home");
-				this.OUTFILENAME+="/Desktop";
-				System.out.println(this.OUTFILENAME);
-			}
-			else{
-				int endIndex = this.INFILENAME.lastIndexOf("\\");
-				if (endIndex != -1) {
-					this.OUTFILENAME = this.INFILENAME.substring(0, endIndex);
-				}
-			}
+			
+			saveInputDirectory();
+			
 			// to save output file in the same folder than input
 			FileWriter writer = new FileWriter(this.OUTFILENAME + "/output.fasta");
 			BufferedWriter bufferedWriter = new BufferedWriter(writer);
@@ -315,6 +356,23 @@ public class Simulator5 {
 		}
 	}
 	
+	// Auxilixar function: save the file in the same directory of input file 
+	public void saveInputDirectory () {
+
+		if(this.INFILENAME==null) {
+			this.OUTFILENAME = System.getProperty("user.home");
+			this.OUTFILENAME+="/Desktop";
+			System.out.println(this.OUTFILENAME);
+		}
+		else{
+			int endIndex = this.INFILENAME.lastIndexOf("\\");
+			if (endIndex != -1) {
+				this.OUTFILENAME = this.INFILENAME.substring(0, endIndex);
+			}
+		}
+	}
+
+	// Generate a random sequence
 	public void generate(){
 		sequences = new ArrayList<String>();
 		randomSeq();
@@ -325,6 +383,7 @@ public class Simulator5 {
 		check();
 	}
 
+	// Auxiliar function: random nucleotide generator and build sequence
 	public void randomSeq(){
 		int i = 0;
 		int rand;
@@ -359,6 +418,7 @@ public class Simulator5 {
 		this.original.add(stringBuffer.toString());
 	}
 	
+	// Auxiliar function
 	private void check(){
 		this.seqSize = this.sequences.size();
 		
