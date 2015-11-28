@@ -14,11 +14,12 @@ public class Graphics {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         JButton input = new JButton("Input FASTA file");
+        JButton generate = new JButton("Generate sequence");
         JButton exit = new JButton("Exit");
         
         JPanel buttonPanel = new JPanel(new GridLayout(3, 1));
         buttonPanel.add(input);
-        buttonPanel.add(new JButton("Generate sequence"));
+        buttonPanel.add(generate);
         buttonPanel.add(exit);
 
         input.addActionListener(new ActionListener()
@@ -29,15 +30,24 @@ public class Graphics {
 			//sim.execute();
 			sim.input();
 			getvalues();
-			//System.out.println(sim.getMR());
-			//System.out.println(sim.getRR());
-			//System.out.println(sim.getGEN());
 			execute();
 			
 			sim.output();
 			JOptionPane.showMessageDialog(frame, "The output was successful!\n"+"(1) output file have been generated!", "Successful", JOptionPane.INFORMATION_MESSAGE);
-			//System.out.println(sim.getMR());
 		}
+        });
+        
+        generate.addActionListener(new ActionListener()
+        {
+        	@Override
+        	public void actionPerformed(ActionEvent e) {
+        		getparameters();
+        		sim.generate();
+        		getvalues();
+        		execute();
+        		sim.output();
+        		JOptionPane.showMessageDialog(frame, "The output was successful!\n"+"(1) output file have been generated!", "Successful", JOptionPane.INFORMATION_MESSAGE);
+        	}
         });
         
         exit.addActionListener(new ActionListener()
@@ -83,13 +93,15 @@ public class Graphics {
     	sim.setGEN(Integer.parseInt((String)JOptionPane.showInputDialog(frame,"Insert the number of generations:\n","Generations",JOptionPane.PLAIN_MESSAGE,null, null, null)));
 		sim.setMR(Double.parseDouble((String)JOptionPane.showInputDialog(frame,"Insert the mutation rate:\n","Mutation Rate",JOptionPane.PLAIN_MESSAGE,null, null, "Insert values between 0 and 1")));
 		sim.setRR(Double.parseDouble((String)JOptionPane.showInputDialog(frame,"Insert the recombination rate:\n","Recombination Rate",JOptionPane.PLAIN_MESSAGE,null, null, "Insert values between 0 and 1")));
-		sim.setRFL(Integer.parseInt((String)JOptionPane.showInputDialog(frame,"Insert the recombination fragment length:\n","Recombination Fragment Length",JOptionPane.PLAIN_MESSAGE,null, null, null)));
+		sim.setRFL(Integer.parseInt((String)JOptionPane.showInputDialog(frame,"Insert the recombination fragment length:\n","Recombination Fragment Length",JOptionPane.PLAIN_MESSAGE,null, null, null)));	
+    }
+    
+    public void getparameters(){
+    	sim.setPS(Integer.parseInt((String)JOptionPane.showInputDialog(frame, "Insert the population size:\n", "Population Size", JOptionPane.PLAIN_MESSAGE, null, null, null)));
+    	sim.setSS(Integer.parseInt((String)JOptionPane.showInputDialog(frame, "Insert the sequence size:\n", "Sequence Size", JOptionPane.PLAIN_MESSAGE, null, null, null)));
     }
     
     public void execute(){
-    	//sim.setMR(0.3);
-    	//sim.setRR(0.3);
-    	//sim.setRFL(5);
     	for(int i=0; i<sim.getGEN();i++){
 			sim.mutation();
 			sim.recombine();

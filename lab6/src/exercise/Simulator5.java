@@ -16,8 +16,8 @@ public class Simulator5 {
 	private String INFILENAME; // file of input
 	private String OUTFILENAME; // file to output
 
-	//private int ss; // sequence size
-	//private int ps; // population size
+	private int ss; // sequence size
+	private int ps; // population size
 	private int gen; // number of genetarions
 
 	private double mr; // mutation rate
@@ -25,6 +25,7 @@ public class Simulator5 {
 	private int rfl; // recombination fragment length
 
 	private List<String> sequences; //list of sequences from input file
+	private List<String> original; //list of original sequences
 	private int seqSize; // number of sequences
 	private int maxSize; // to avoid different size of sequences
 	
@@ -44,6 +45,22 @@ public class Simulator5 {
 		return this.gen;
 	}
 	
+	public int getPS(){
+		return this.ps;
+	}
+	
+	public int getSS(){
+		return this.ss;
+	}
+	
+	public void setSS(int ss){
+		this.ss = ss;
+	}
+	
+	public void setPS(int ps){
+		this.ps = ps;
+	}
+	
 	public void setGEN(int gen){
 		this.gen = gen;
 	}
@@ -61,10 +78,11 @@ public class Simulator5 {
 	}
 
 	// function to process input from FASTA file
-	void input() {
+	public void input() {
 		String[] parsed = null;
 		String[] splited = null;
 		sequences = new ArrayList<String>();
+		original = new ArrayList<String>();
 
 		// to create interactive window to input FASTA file
 		File sf = null;
@@ -95,16 +113,22 @@ public class Simulator5 {
 				splited = parsed[i].split("\\n", 2);
 				String sequence = splited[1].replaceAll("[\r\n]", "");
 				this.sequences.add(sequence);
-				//System.out.println("lista: "+ this.sequences.get(i-1));
+				this.original.add(sequence);
 			}
-			// to keep size of sequence
-			this.seqSize = this.sequences.size();
+			// to save the size of sequence
+			/*this.seqSize = this.sequences.size();
 			
 			this.maxSize = this.sequences.get(0).length();
 			for(String tmp : this.sequences) {
 				if(this.maxSize > tmp.length())
 					this.maxSize = tmp.length();
 			}
+			
+			if(this.rfl > this.maxSize)
+				this.rfl = this.maxSize;
+			*/
+			check();
+			
 			reader.close();
 
 		} catch (IOException e) {
@@ -113,7 +137,7 @@ public class Simulator5 {
 	}
 
 	//Mutation
-	private void mutation() {
+	public void mutation() {
 
 		String seq, seqMutated;
 		char oldNucleotide, newNucleotide;
@@ -129,7 +153,7 @@ public class Simulator5 {
 			if (number <= this.mr) { //condition to mutate
 				
 				seq = this.sequences.get(i);
-				pos = (int) (Math.round(Math.random() * seq.length())); //choose a random position in the sequence. improve the distribution with round()
+				pos = (int) (Math.round(Math.random() * (seq.length()-1))); //choose a random position in the sequence. improve the distribution with round()
 
 				oldNucleotide = seq.charAt(pos); //get the actual nucleotide
 				newNucleotide = randomNucleotide(oldNucleotide); //choose a random nucleotide           
@@ -150,7 +174,7 @@ public class Simulator5 {
 		int rand;
 		char newNucleotide = nucleotide;
 
-		rand = (int) (Math.random() * 4);
+		rand = (int) (Math.random() * 3);
 
 		while (newNucleotide == nucleotide) { //guarantees that the new nucleotide is different from the original
 			switch (rand) {
@@ -167,12 +191,12 @@ public class Simulator5 {
 				newNucleotide = 'G';
 				break;
 			}
-			rand = (int) (Math.random() * 4);
+			rand = (int) (Math.random() * 3);
 		}
 		return newNucleotide;
 	}
 
-	void recombine() {
+	public void recombine() {
 		
 		int max, random, randMax, copSeq;
 		double rng;
@@ -256,25 +280,32 @@ public class Simulator5 {
 		return jukesCantor;
 	}
 
-	void output() {
-		System.out.println(this.sequences);
-		System.out.println(this.sequences.get(0));
+	public void output() {
 		try {
 			// to save the directory of input file
-			int endIndex = this.INFILENAME.lastIndexOf("\\");
-			if (endIndex != -1) {
-				this.OUTFILENAME = this.INFILENAME.substring(0, endIndex);
+			if(this.INFILENAME==null) {
+				this.OUTFILENAME = System.getProperty("user.home");
+				this.OUTFILENAME+="/Desktop";
+				System.out.println(this.OUTFILENAME);
 			}
-
+			else{
+				int endIndex = this.INFILENAME.lastIndexOf("\\");
+				if (endIndex != -1) {
+					this.OUTFILENAME = this.INFILENAME.substring(0, endIndex);
+				}
+			}
 			// to save output file in the same folder than input
 			FileWriter writer = new FileWriter(this.OUTFILENAME + "/output.fasta");
 			BufferedWriter bufferedWriter = new BufferedWriter(writer);
 
 			// to write each sequence in FASTA file
 			for (int i = 0; i < this.sequences.size(); i++) {
-				bufferedWriter.write(">Sequence" + "_" + (i + 1) + "\n");
-				bufferedWriter.write(this.sequences.get(i));
-				bufferedWriter.write("\n");
+				if(i<original.size()){
+					bufferedWriter.write(">seq" + (i+1) + "_initial" + "\n");
+					bufferedWriter.write(this.original.get(i) + "\n");
+				}
+				bufferedWriter.write(">seq" + "_" + (i + 1) + "\n");
+				bufferedWriter.write(this.sequences.get(i) + "\n");
 			}
 
 			bufferedWriter.close();
@@ -283,5 +314,61 @@ public class Simulator5 {
 			e.printStackTrace();
 		}
 	}
+	
+	public void generate(){
+		sequences = new ArrayList<String>();
+		randomSeq();
+		// to make copies of random sequence until population size
+		for(int i=0; i < this.ps; i++){
+			this.sequences.add(original.get(0));
+		}
+		check();
+	}
 
+	public void randomSeq(){
+		int i = 0;
+		int rand;
+		
+		original = new ArrayList<String>();
+		StringBuffer stringBuffer = new StringBuffer();
+		
+		rand = (int) (Math.random() * 3);
+		
+		while (i < this.ss) { // to generate random sequence with sequence size desired
+			switch (rand) {
+			case 0:
+				stringBuffer.append("A");
+				i++;
+				break;
+			case 1:
+				stringBuffer.append("C");
+				i++;
+				break;
+			case 2:
+				stringBuffer.append("T");
+				i++;
+				break;
+			case 3:
+				stringBuffer.append("G");
+				i++;
+				break;
+			}
+			rand = (int) (Math.random() * 3);
+		}
+		System.out.println(stringBuffer);
+		this.original.add(stringBuffer.toString());
+	}
+	
+	private void check(){
+		this.seqSize = this.sequences.size();
+		
+		this.maxSize = this.sequences.get(0).length();
+		for(String tmp : this.sequences) {
+			if(this.maxSize > tmp.length())
+				this.maxSize = tmp.length();
+		}
+		
+		if(this.rfl > this.maxSize)
+			this.rfl = this.maxSize;
+	}
 }
