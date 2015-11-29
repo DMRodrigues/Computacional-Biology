@@ -74,7 +74,12 @@ public class Simulator5 {
 	}
 
 	public void setRFL(int rfl){
-		this.rfl = rfl;
+		
+		// verificar o rfl aqui e so aqui
+		if(rfl > this.maxSize)
+			this.rfl = this.maxSize;
+		else
+			this.rfl = rfl;
 	}
 	
 	public void setRR(double rr){
@@ -334,7 +339,7 @@ public class Simulator5 {
 		try {
 			
 			saveInputDirectory();
-			
+			System.out.println(this.OUTFILENAME);
 			// to save output file in the same folder than input
 			FileWriter writer = new FileWriter(this.OUTFILENAME + "/output.fasta");
 			BufferedWriter bufferedWriter = new BufferedWriter(writer);
@@ -427,8 +432,5 @@ public class Simulator5 {
 			if(this.maxSize > tmp.length())
 				this.maxSize = tmp.length();
 		}
-		
-		if(this.rfl > this.maxSize)
-			this.rfl = this.maxSize;
 	}
 }
