@@ -15,11 +15,13 @@ public class Graphics {
 
         JButton input = new JButton("Input FASTA file");
         JButton generate = new JButton("Generate sequence");
+        JButton genNoriginal = new JButton("Generate N sequences");
         JButton exit = new JButton("Exit");
         
-        JPanel buttonPanel = new JPanel(new GridLayout(3, 1));
+        JPanel buttonPanel = new JPanel(new GridLayout(4, 1));
         buttonPanel.add(input);
         buttonPanel.add(generate);
+        buttonPanel.add(genNoriginal);
         buttonPanel.add(exit);
 
         input.addActionListener(new ActionListener()
@@ -44,6 +46,20 @@ public class Graphics {
         		getparameters();
         		sim.generate();
         		getvalues();
+        		execute();
+        		sim.output();
+        		JOptionPane.showMessageDialog(frame, "The output was successful!\n"+"(1) output file have been generated!", "Successful", JOptionPane.INFORMATION_MESSAGE);
+        	}
+        });
+        
+        genNoriginal.addActionListener(new ActionListener()
+        {
+        	@Override
+        	public void actionPerformed(ActionEvent e) {
+        		getN();
+        		getparameters();
+        		getvalues();
+        		sim.genNrandoms();
         		execute();
         		sim.output();
         		JOptionPane.showMessageDialog(frame, "The output was successful!\n"+"(1) output file have been generated!", "Successful", JOptionPane.INFORMATION_MESSAGE);
@@ -111,6 +127,10 @@ public class Graphics {
 			sim.plot();
 		}
     }
+    
+    public void getN(){
+    	sim.setOrgSeq(Integer.parseInt((String)JOptionPane.showInputDialog(frame, "Insert the number of originals sequences:\n", "Original Sequences", JOptionPane.PLAIN_MESSAGE, null, null, null)));
+    	}
     
     public static void main(String[] args) {
         try {
