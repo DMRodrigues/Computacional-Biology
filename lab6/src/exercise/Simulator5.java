@@ -19,7 +19,8 @@ public class Simulator5 {
 	private int ss; // sequence size
 	private int ps; // population size
 	private int gen; // number of genetarions
-	private int actualGen; //actual generation
+	private int actualGen; // actual generation
+	private int originalSeq; // number of original sequences to randomize
 
 	private double mr; // mutation rate
 	private double rr; // recombination rate
@@ -55,6 +56,14 @@ public class Simulator5 {
 	
 	public int getSS(){
 		return this.ss;
+	}
+	
+	public int getOrgSeq(){
+		return this.originalSeq;
+	}
+	
+	public void setOrgSeq(int orgSeq){
+		this.originalSeq = orgSeq;
 	}
 	
 	public void setSS(int ss){
@@ -123,18 +132,6 @@ public class Simulator5 {
 				this.sequences.add(sequence);
 				this.original.add(sequence);
 			}
-			// to save the size of sequence
-			/*this.seqSize = this.sequences.size();
-			
-			this.maxSize = this.sequences.get(0).length();
-			for(String tmp : this.sequences) {
-				if(this.maxSize > tmp.length())
-					this.maxSize = tmp.length();
-			}
-			
-			if(this.rfl > this.maxSize)
-				this.rfl = this.maxSize;
-			*/
 			check();
 			
 			reader.close();
@@ -257,6 +254,8 @@ public class Simulator5 {
 
 				for (int c = 0; c < size; c++){ 
 					if(seq1.charAt(c) != seq2.charAt(c)){
+						System.out.println("Seq1; Char: "+seq1.charAt(c));
+						System.out.println("Seq2; Char: "+seq2.charAt(c));
 						dist++; //counting when the sequences differ from each other
 					}
 				}
@@ -348,6 +347,13 @@ public class Simulator5 {
 				bufferedWriter.write(">seq" + "_" + (i + 1) + "\n");
 				bufferedWriter.write(this.sequences.get(i) + "\n");
 			}
+			/*
+			for(int i=0; i<this.sequences.size(); i++){
+				for(int j=0; j<original.size(); j++){
+					this.sequences.add(original.get(i));				
+				}
+			}*/
+			
 
 			bufferedWriter.close();
 
@@ -375,6 +381,7 @@ public class Simulator5 {
 	// Generate a random sequence
 	public void generate(){
 		sequences = new ArrayList<String>();
+		original = new ArrayList<String>();
 		randomSeq();
 		// to make copies of random sequence until population size
 		for(int i=0; i < this.ps; i++){
@@ -388,7 +395,7 @@ public class Simulator5 {
 		int i = 0;
 		int rand;
 		
-		original = new ArrayList<String>();
+		//original = new ArrayList<String>();
 		StringBuffer stringBuffer = new StringBuffer();
 		
 		rand = (int) (Math.random() * 3);
@@ -430,5 +437,30 @@ public class Simulator5 {
 		
 		if(this.rfl > this.maxSize)
 			this.rfl = this.maxSize;
+	}
+	
+	public void genNrandoms(){
+		//int i=0;
+		sequences = new ArrayList<String>();
+		original = new ArrayList<String>();
+		for(int j=0; j<this.originalSeq; j++){
+			randomSeq();
+		}
+		System.out.println("Sequences: "+sequences);
+		// to make copies of random sequence until population size
+		
+		for(int i=0; i<original.size(); i++){
+			for(int j=0; j<((this.ps-this.originalSeq)/this.originalSeq); j++){
+				this.sequences.add(original.get(i));				
+			}
+		}
+		/*
+		for (String tmp : this.original){
+			if(i < ((this.ps - this.originalSeq)/this.originalSeq)){
+				this.sequences.add(tmp);
+			}
+			i++;
+		}*/
+		check();
 	}
 }
