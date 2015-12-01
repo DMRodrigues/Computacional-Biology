@@ -6,7 +6,7 @@ import java.awt.event.ActionListener;
 import javax.swing.*;
 
 public class Graphics {
-	Simulator5 sim = new Simulator5();
+	Simulator sim = new Simulator();
 	final JFrame frame = new JFrame("Sequence evaluation simulator");
 	
     public Graphics() {
@@ -16,12 +16,14 @@ public class Graphics {
         JButton input = new JButton("Input FASTA file");
         JButton generate = new JButton("Generate sequence");
         JButton genNoriginal = new JButton("Generate N sequences");
+        JButton about = new JButton("About");
         JButton exit = new JButton("Exit");
         
-        JPanel buttonPanel = new JPanel(new GridLayout(4, 1));
+        JPanel buttonPanel = new JPanel(new GridLayout(5, 1));
         buttonPanel.add(input);
         buttonPanel.add(generate);
         buttonPanel.add(genNoriginal);
+        buttonPanel.add(about);
         buttonPanel.add(exit);
 
         input.addActionListener(new ActionListener()
@@ -63,6 +65,14 @@ public class Graphics {
         		execute();
         		sim.output();
         		JOptionPane.showMessageDialog(frame, "The output was successful!\n"+"(1) output file have been generated!", "Successful", JOptionPane.INFORMATION_MESSAGE);
+        	}
+        });
+        
+        about.addActionListener(new ActionListener()
+        {
+        	@Override
+        	public void actionPerformed(ActionEvent e) {
+        		JOptionPane.showMessageDialog(frame, "IST 1st Semester 2015/2016\n\nComputacional Biology\n\nGroup 9\nVanessa Gaspar\nDiogo Rodrigues\nNuno Pires", "About", JOptionPane.INFORMATION_MESSAGE);
         	}
         });
         
