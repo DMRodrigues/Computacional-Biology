@@ -130,13 +130,34 @@ public class Simulator {
 				parsed = (stringBuffer.toString()).split(">");
 			}
 
-			//to remove header from FASTA file 
-			for(int i = 1; i < parsed.length; i++) {
-				splited = parsed[i].split("\\n", 2);
-				String sequence = splited[1].replaceAll("[\r\n]", "");
-				this.sequences.add(sequence);
-				this.original.add(sequence);
+			//to remove header from FASTA file
+			System.out.println("Antes do if do input: "+this.originalSeq);
+			if(this.originalSeq==0){
+				System.out.println("Estou no input 1");
+				for(int i = 1; i < parsed.length; i++) {
+					splited = parsed[i].split("\\n", 2);
+					String sequence = splited[1].replaceAll("[\r\n]", "");
+					this.sequences.add(sequence);
+					this.original.add(sequence);
+				}
 			}
+			else{
+				System.out.println("Estou no input 2");
+				for(int i = 1; i < parsed.length; i++) {
+					splited = parsed[i].split("\\n", 2);
+					String sequence = splited[1].replaceAll("[\r\n]", "");
+					if(i==1 || i==(parsed.length/this.originalSeq)+1){
+						System.out.println(i);
+						this.original.add(sequence);
+					}
+					else{
+						this.sequences.add(sequence);
+					}
+					
+				}this.originalSeq=this.original.size();
+			}
+			//this.originalSeq=this.original.size();
+			System.out.println("Depois do input: "+this.originalSeq);
 			check();
 			
 			reader.close();
@@ -342,8 +363,9 @@ public class Simulator {
 			BufferedWriter bufferedWriter = new BufferedWriter(writer);
 
 			// to write each sequence in FASTA file
-			
+			System.out.println("Antes do if do output : "+this.originalSeq);
 			if(this.originalSeq==0){
+				System.out.println("Estou no output 1");
 				for (int i = 0; i < this.sequences.size(); i++) {
 					if(i<original.size()){
 						bufferedWriter.write(">seq" + (i+1) + "_initial" + "\n");
@@ -353,7 +375,7 @@ public class Simulator {
 					bufferedWriter.write(this.sequences.get(i) + "\n");
 				}
 			} else{
-				
+				System.out.println("Estou no output 2");
 				int jump = (this.sequences.size()/this.originalSeq);
 				
 				for(int i=0 ; i<this.original.size(); i++){
@@ -364,9 +386,9 @@ public class Simulator {
 						bufferedWriter.write(this.sequences.get(j+(i*jump))+"\n");
 					}
 				}
-				this.originalSeq=0;
-				
+				//this.originalSeq=0;
 			}
+			System.out.println("Output: "+this.originalSeq);
 
 			bufferedWriter.close();
 
@@ -464,5 +486,31 @@ public class Simulator {
 			}
 		}
 		check();
+
+	try {
+			
+			saveInputDirectory();
+			
+			FileWriter writer = new FileWriter(this.OUTFILENAME + separator + "sequenceRandom.fasta");
+			BufferedWriter bufferedWriter = new BufferedWriter(writer);
+
+		
+				int jump = (this.sequences.size()/this.originalSeq);
+				
+				for(int i=0 ; i<this.original.size(); i++){
+					bufferedWriter.write(">seq"+(i+1)+"_initial"+"\n");
+					bufferedWriter.write(this.original.get(i)+"\n");
+					for(int j=0; j<jump; j++){
+						bufferedWriter.write(">seq"+"_"+(i+1)+"_"+(j+1)+"\n");
+						bufferedWriter.write(this.sequences.get(j+(i*jump))+"\n");
+					}
+				}
+
+			bufferedWriter.close();
+			System.out.println("OK");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
 	}
 }

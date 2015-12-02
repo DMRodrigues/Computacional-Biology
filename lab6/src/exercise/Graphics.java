@@ -14,15 +14,19 @@ public class Graphics {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         JButton input = new JButton("Input FASTA file");
+        JButton inputc = new JButton("Input FASTA file with copies");
         JButton generate = new JButton("Generate sequence");
         JButton genNoriginal = new JButton("Generate N sequences");
+        //JButton reset = new JButton("Reset parameter");
         JButton about = new JButton("About");
         JButton exit = new JButton("Exit");
         
-        JPanel buttonPanel = new JPanel(new GridLayout(5, 1));
+        JPanel buttonPanel = new JPanel(new GridLayout(6, 1));
         buttonPanel.add(input);
+        buttonPanel.add(inputc);
         buttonPanel.add(generate);
         buttonPanel.add(genNoriginal);
+        //buttonPanel.add(reset);
         buttonPanel.add(about);
         buttonPanel.add(exit);
 
@@ -31,7 +35,7 @@ public class Graphics {
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			//sim.execute();
+			sim.setOrgSeq(0);
 			sim.input();
 			getvalues();
 			execute();
@@ -39,6 +43,19 @@ public class Graphics {
 			sim.output();
 			JOptionPane.showMessageDialog(frame, "The output was successful!\n"+"(1) output file have been generated!", "Successful", JOptionPane.INFORMATION_MESSAGE);
 		}
+        });
+        
+        inputc.addActionListener(new ActionListener()
+        {
+        	@Override
+        	public void actionPerformed(ActionEvent e) {
+        		sim.setOrgSeq(-1);
+        		sim.input();
+        		getvalues();
+        		execute();
+        		sim.output();
+        		JOptionPane.showMessageDialog(frame, "The output was successful!\n"+"(1) output file have been generated!", "Successful", JOptionPane.INFORMATION_MESSAGE);
+        	}
         });
         
         generate.addActionListener(new ActionListener()
@@ -67,7 +84,15 @@ public class Graphics {
         		JOptionPane.showMessageDialog(frame, "The output was successful!\n"+"(1) output file have been generated!", "Successful", JOptionPane.INFORMATION_MESSAGE);
         	}
         });
-        
+/*        
+        reset.addActionListener(new ActionListener()
+        {
+        	@Override
+        	public void actionPerformed(ActionEvent e) {
+        		sim.setOrgSeq(0);
+        	}
+        });
+*/        
         about.addActionListener(new ActionListener()
         {
         	@Override
