@@ -143,12 +143,15 @@ public class Simulator {
 			}
 			else{
 				System.out.println("Estou no input 2");
+				System.out.println(parsed.length-1);
 				for(int i = 1; i < parsed.length; i++) {
 					splited = parsed[i].split("\\n", 2);
 					String sequence = splited[1].replaceAll("[\r\n]", "");
-					if(i==1 || i==(parsed.length/this.originalSeq)+1){
+					if(i==1 || i==((parsed.length-1)/(this.original.size()+1)+1)){
 						System.out.println(i);
+						System.out.println(i+":"+sequence);
 						this.original.add(sequence);
+						
 					}
 					else{
 						this.sequences.add(sequence);
@@ -156,7 +159,9 @@ public class Simulator {
 					
 				}this.originalSeq=this.original.size();
 			}
-			//this.originalSeq=this.original.size();
+			System.out.println("original 1:"+original.get(0));
+			System.out.println("original 2:"+original.get(1));
+			this.originalSeq=this.original.size();
 			System.out.println("Depois do input: "+this.originalSeq);
 			check();
 			

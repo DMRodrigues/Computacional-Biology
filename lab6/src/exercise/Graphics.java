@@ -49,7 +49,7 @@ public class Graphics {
         {
         	@Override
         	public void actionPerformed(ActionEvent e) {
-        		sim.setOrgSeq(-1);
+        		sim.setOrgSeq(-2);
         		sim.input();
         		getvalues();
         		execute();
